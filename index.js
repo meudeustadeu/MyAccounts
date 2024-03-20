@@ -1,9 +1,7 @@
 /* eslint-disable no-undef */
 const inquirer = require('inquirer');
 const chalk = require('chalk');
-
 const fs = require('fs');
-const { parse } = require('path');
 
 operation();
 
@@ -29,7 +27,7 @@ function operation() {
 			if (action === 'Criar Conta') {
 				createAccount();
 			} else if (action === 'Consultar Saldo') {
-				getCash();
+				getAccountBalance();
 			} else if (action === 'Depositar') {
 				deposit();
 			} else if (action === 'Sacar') {
@@ -40,41 +38,6 @@ function operation() {
 			}
 		});
 }
-
-function getAccount(accountName) {
-	const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
-		encoding: 'utf8',
-		flag: 'r',
-	});
-
-	return JSON.parse(accountJSON);
-}
-
-function getCash() {
-	inquirer
-		.prompt([
-			{
-				name: 'accountName',
-				message: 'Digite o nome da sua conta:',
-			},
-		])
-		.then((answer) => {
-			const accountName = answer['accountName'];
-
-			if (!checkAccount(accountName)) {
-				return getCash();
-			}
-
-			const accountData = getAccount(accountName);
-
-			console.log(
-				chalk.bgBlue.white(`Olá, seu saldo é R$${accountData.balance}!`)
-			);
-			operation();
-		})
-		.catch((err) => console.log(err));
-}
-
 function createAccount() {
 	console.log(chalk.bgGreen.black('Parabèns por escolher nosso banco!'));
 	console.log(chalk.green('Defina as opções da sua conta:'));
@@ -117,13 +80,12 @@ function buildAccount() {
 				function (err) {
 					console.log(err);
 				}
-			);
-			// console.clear()
-			console.log(chalk.bgGreen.black(`Parabéns ${accountName}!!! Sua conta foi criada! $.$ `));
 
+			);
+
+			console.log(chalk.bgGreen.black(`Parabéns ${accountName}!!! Sua conta foi criada! $.$ `));
 			operation();
-		})
-		.catch((err) => console.log(err));
+		});
 }
 
 function deposit() {
@@ -141,10 +103,6 @@ function deposit() {
 				return deposit();
 			}
 
-			// if(!checkPassword(accountName)){
-			// 	return deposit();
-			// }
-
 			inquirer
 				.prompt([
 					{
@@ -155,7 +113,7 @@ function deposit() {
 				.then((answer) => {
 					const amount = answer['balance'];
 
-					console.log(`Você está depositando: R$${amount}... aguarde...`);
+					console.log(chalk.bgGreen.black(`Você realizou um deposito de: R$${amount} !!!`));
 					addAmount(accountName, amount);
 
 					operation();
@@ -172,6 +130,15 @@ function checkAccount(accountName) {
 	}
 
 	return true;
+}
+
+function getAccount(accountName) {
+	const accountJSON = fs.readFileSync(`accounts/${accountName}.json`, {
+		encoding: 'utf8',
+		flag: 'r',
+	});
+
+	return JSON.parse(accountJSON);
 }
 
 function addAmount(accountName, amount) {
@@ -197,13 +164,36 @@ function addAmount(accountName, amount) {
 		}
 	);
 }
+function getAccountBalance() {
+	inquirer
+		.prompt([
+			{
+				name: 'accountName',
+				message: 'Digite o nome da sua conta:',
+			},
+		])
+		.then((answer) => {
+			const accountName = answer['accountName'];
+
+			if (!checkAccount(accountName)) {
+				return getAccountBalance();
+			}
+
+			const accountData = getAccount(accountName);
+
+			console.log(
+				chalk.bgBlue.white(`Olá, seu saldo é R$${accountData.balance}!`)
+			);
+			operation();
+		});
+}
 
 function withdraw() {
 	inquirer
 		.prompt([
 			{
 				name: 'accountName',
-				message: 'Digite o nome da sua conta!',
+				message: 'Digite o nome da sua conta:',
 			},
 		])
 		.then((answer) => {
@@ -224,7 +214,7 @@ function withdraw() {
 					const amount = answer['amount'];
 
 					removeAmount(accountName, amount);
-					operation();
+					// operation();
 				});
 		});
 }
@@ -239,7 +229,6 @@ function removeAmount(accountName, amount) {
 	}
 
 	const accountData = getAccount(accountName);
-	//destructuring
 
 	if (amount > accountData.balance) {
 		console.log(
